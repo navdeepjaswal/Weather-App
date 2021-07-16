@@ -189,7 +189,7 @@
 
         function getWeather(location) {
 
-            fetch("http://api.weatherapi.com/v1/forecast.json?key=269fbfa584374211b6d173853210107&q=" + location + " &days=1&aqi=no&alerts=no ")
+            fetch("https://api.weatherapi.com/v1/forecast.json?key=269fbfa584374211b6d173853210107&q=" + location + " &days=1&aqi=no&alerts=no ")
                 .then(response => response.json())
                 .then(data => {
                     console.log(data);
