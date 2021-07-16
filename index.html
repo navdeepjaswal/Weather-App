@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Krona+One&family=Lobster&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <style>
+        body {
+            color: white;
+            margin: 0;
+            overflow-y: auto;
+            font-family: 'Poppins', sans-serif;
+            background: url(/weather.png);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-color: #66c0ff;
+        }
+        
+        #input {
+            width: 25%;
+            min-width: 17rem;
+            padding: 5px 10px;
+            font-size: 20px;
+            border-radius: 20px;
+            font-family: system-ui;
+        }
+        
+        #input:focus-visible {
+            outline: none;
+        }
+        
+        .searchDiv {
+            text-align: center;
+        }
+        
+        .searchDiv p {
+            font-family: 'Poppins';
+            font-size: 40px;
+            font-weight: 600;
+            text-shadow: 2px 2px 9px black;
+        }
+        
+        .forecastDiv {
+            margin-top: 5%;
+        }
+        
+        .forecast {
+            margin: 0 auto;
+            padding: 5px;
+            width: 45rem;
+            height: 26rem;
+            border-radius: 10px;
+            background: #ffffff61;
+            text-shadow: 2px 2px 20px black;
+        }
+        
+        .fa-search {
+            font-size: 1.5rem;
+            color: white;
+            padding-left: 15px;
+        }
+        
+        .fa-search:hover {
+            animation-duration: 1s;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        
+        .info {
+            list-style: none;
+            color: white;
+            font-size: 27px;
+        }
+        
+        .weatherHeading {
+            display: flex;
+            justify-content: space-around;
+            font-size: 3em;
+        }
+        
+        #degree-toggle {
+            float: right;
+            position: relative;
+            top: 7%;
+            right: 2%;
+            color: white;
+            font-weight: 600;
+            font-size: 2em;
+            text-shadow: none;
+        }
+        
+        #degree-toggle a {
+            color: #54676c;
+            text-decoration: none;
+            opacity: 0.6;
+        }
+        
+        .active {
+            color: white !important;
+            opacity: 1 !important;
+        }
+    </style>
+    <div class="container">
+        <div class="searchDiv">
+            <p>Enter Country, State, City, ZIP, or IP Address</p>
+            <input type="text" id="input"></input>
+            <i class="fas fa-search"></i>
+        </div>
+
+
+        <div class="forecastDiv" style="display: none;">
+            <div class="forecast">
+                <div class="weatherHeading">
+                    <p id="temperature"></p>
+                    <div style="display: flex;
+                    align-items: center;">
+                        <p id="condition"> </p> <img id="icon"></img>
+                    </div>
+                </div>
+
+                <ul class="info">
+                    <li id="location"></li>
+                    <li id="day"></li>
+                    <li id="date"></li>
+                </ul>
+
+                <div id="degree-toggle"> <a href="#" class="temp_c" role="button"> &deg;C </a> | <a href="#" class="temp_f" role="button"> &deg;F </a>
+                </div>
+
+
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        var temp_data = null;
+        var temp_pref = null;
+        $(document).ready(function() {
+            toggleTemp();
+            if ("geolocation" in navigator) { //check geolocation available 
+                //try to get user current location using getCurrentPosition() method
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    console.log("Found your location \nLat : " + position.coords.latitude + " \nLang :" + position.coords.longitude);
+                    $('#input').val(position.coords.latitude + " " + position.coords.longitude);
+                    $('.fa-search').click();
+                    $('#input').val("");
+                });
+            } else {
+                console.log("Browser doesn't support geolocation!");
+            }
+        })
+        $(document).on('keypress', function(e) {
+            if (e.which == 13) {
+                $('.fa-search').click();
+            }
+        })
+
+        $('.fa-search').click(function() {
+            if ($('#input').val()) {
+                getWeather($("#input").val());
+            }
+
+        })
+
+        $('.temp_c, .temp_f').click(function() {
+            if ($(this).hasClass('temp_c')) {
+                localStorage.setItem('temp_pref', 'c')
+            } else {
+                localStorage.setItem('temp_pref', 'f')
+            }
+            toggleTemp();
+
+        })
+
+        function getWeather(location) {
+
+            fetch("http://api.weatherapi.com/v1/forecast.json?key=269fbfa584374211b6d173853210107&q=" + location + " &days=1&aqi=no&alerts=no ")
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.error) {
+                        alert(data.error.message)
+                    } else {
+                        temp_data = data;
+                        $(".forecastDiv ").slideDown('slow');
+                        var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        var d = new Date();
+                        var dayName = days[d.getDay()];
+
+                        var temperature = $("#temperature");
+                        var day = $("#day");
+                        var location = $("#location");
+                        var condition = $("#condition");
+                        var date = $("#date");
+                        var icon = $("#icon");
+                        if (localStorage.getItem('temp_pref')) {
+                            if (localStorage.getItem('temp_pref') == 'f') {
+                                temperature.text(data.current.temp_f + " °F ");
+                            } else if (localStorage.getItem('temp_pref') == 'c') {
+                                temperature.text(data.current.temp_c + " °C ");
+                            }
+                        } else {
+                            temperature.text(data.current.temp_f + " °F ");
+                        }
+
+
+
+
+                        day.text(dayName);
+                        location.text(data.location.name)
+                        if (condition.text().length)
+                            condition.text(data.current.condition.text)
+                        date.text(data.location.localtime)
+                        icon.attr('src', data.current.condition.icon)
+                    }
+
+                });
+        }
+
+        function toggleTemp() {
+            temp_pref = localStorage.getItem('temp_pref');
+            console.log(temp_data);
+            if (temp_pref) {
+                if (localStorage.getItem('temp_pref') == 'f') {
+                    $('.temp_f').addClass('active');
+                    $('.temp_c').removeClass('active');
+                    if (temp_data) {
+                        $('#temperature').text(temp_data.current.temp_f + " °F ");
+                    }
+                } else if (localStorage.getItem('temp_pref') == 'c') {
+                    $('.temp_c').addClass('active');
+                    $('.temp_f').removeClass('active');
+                    if (temp_data) {
+                        $('#temperature').text(temp_data.current.temp_c + " °C ");
+                    }
+                }
+            } else {
+                localStorage.setItem('temp_pref', 'f');
+                $('.temp_f').addClass('active');
+                $('.temp_c').removeClass('active');
+                if (temp_data) {
+                    $('#temperature').text(temp_data.current.temp_f + " °F ");
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
